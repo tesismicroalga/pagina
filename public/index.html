@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Índice de Calidad del Aire</title>
+    <style>
+      /* Ocultar unidades inicialmente */
+      .unidad {
+        display: none;
+      }
+    </style>
+    <link href="estilos.css" rel="stylesheet"/>
+  </head>
+
+  <body>
+    <div class="encabezado">
+      <img src="cuenca.jpg" alt="encabezado img" height="200" width="1200"/>
+    </div>
+    
+    <div class="contenido-principal">
+      <div class="estado-calidad">
+        <h1>Hoy, <span id="hora-actual"></span> La calidad del aire es: 
+          <span class="bueno" id="estado-calidad-aire">bueno</span>
+        </h1>
+        <p id="descripcion-calidad">Sin impactos para la salud en este rango. Se puede realizar cualquier actividad al aire libre</p>
+    </div>
+
+    <div class="indicadores">
+        <div class="indicador">
+          <div class="valor" id="co2">0 <span class="unidad">ppm</span></div>
+          <p>Dióxido de Carbono (CO2)</p>
+    </div>
+
+    <div class="indicador">
+        <div class="valor" id="tvoc">0 <span class="unidad">ppb</span></div>
+          <p>Totales Compuestos Orgánicos Volátiles (TVOC)</p>
+        </div>
+    </div>
+
+    <div class="grafica">
+        <h2>ÍNDICE GENERAL</h2>
+        <canvas id="grafica-calidad-aire"></canvas>
+        <button id="resetData" class="boton-reinicio">Borrar Historial</button>
+    </div>
+        <!-- Gráfico mensual pequeño -->
+    <div class="contenedor-grafica-datos">
+        <div class="grafica-mensual">
+          <h2>ÍNDICE MENSUAL</h2>
+          <canvas id="grafica-mensual"></canvas>
+        </div>
+
+      <div class="info-sensor">
+        <div class="datos-sensor">
+            <h2>Información del Sensor</h2>
+            <p><strong>Sensor:</strong> SGP30</p>
+            <p><strong>Parámetro:</strong> ppm</p>
+            <p><strong>Primer valor enviado:</strong> <span id="primer-valor">0</span> ppm</p>
+            <p><strong>Último valor enviado:</strong> <span id="ultimo-valor">0</span> ppm</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+     <!-- pie de pagina-->
+    <div class="pie-pagina">
+      <p>Índice de Calidad Aire (ICA)<br>MEDICIÓN DE LA CONTAMINACIÓN DEL AIRE EN CUENCA</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDMqkF_5MUbh-SdF0Gnw2Bx4-3-dPhdmkc",
+        authDomain: "esp32-tesiscalidadaire.firebaseapp.com",
+        databaseURL: "https://esp32-tesiscalidadaire-default-rtdb.firebaseio.com",
+        projectId: "esp32-tesiscalidadaire",
+        storageBucket: "esp32-tesiscalidadaire.appspot.com",
+        messagingSenderId: "355885440104",
+        appId: "1:355885440104:web:849875a8762a9576466fdd",
+        measurementId: "G-1X9LX1CNF3"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+      const datosRef = database.ref('/');
+
+      let chart = null;
+      let chartMensual = null;
+      const maxDataPoints = 150;
+      let co2Data = [];
+      let tvocData = [];
+      let timeLabels = [];
+      let primerValor = null;
+      const storageKey = "sensorData";
+      let ultimoValor = 0;
+      let weeklyData = [];
+      const maxWeeks = 4;
+
+      co2Data = JSON.parse(localStorage.getItem(`${storageKey}_co2`)) || [];
+      tvocData = JSON.parse(localStorage.getItem(`${storageKey}_tvoc`)) || [];
+      timeLabels = JSON.parse(localStorage.getItem(`${storageKey}_labels`)) || [];
+      primerValor = JSON.parse(localStorage.getItem(`${storageKey}_primer`)) || null;
+      ultimoValor = JSON.parse(localStorage.getItem(`${storageKey}_ultimo`)) || 0;
+      weeklyData = JSON.parse(localStorage.getItem(`${storageKey}_weekly`)) || [];
+      
+      // Elementos del DOM
+      let co2Element, tvocElement, co2Unidad, tvocUnidad;
+
+      function saveToLocalStorage() {
+        localStorage.setItem(`${storageKey}_co2`, JSON.stringify(co2Data));
+        localStorage.setItem(`${storageKey}_tvoc`, JSON.stringify(tvocData));
+        localStorage.setItem(`${storageKey}_labels`, JSON.stringify(timeLabels));
+        localStorage.setItem(`${storageKey}_primer`, JSON.stringify(primerValor));
+        localStorage.setItem(`${storageKey}_ultimo`, JSON.stringify(ultimoValor));
+        localStorage.setItem(`${storageKey}_weekly`, JSON.stringify(weeklyData));
+      }
+
+      function initChart() {
+        const ctx = document.getElementById('grafica-calidad-aire').getContext('2d');
+        
+        Chart.defaults.color = '#666';
+        Chart.defaults.font.family = 'Roboto, sans-serif';
+        
+        chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: timeLabels,
+            datasets: [
+              {
+                label: 'CO2 (ppm)',
+                data: co2Data,
+                borderColor: '#2E5077',
+                backgroundColor: 'rgba(255, 165, 0, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 5
+              },
+              {
+                label: 'TVOC (ppb)',
+                data: tvocData,
+                borderColor: '#006A67',
+                backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 5
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                grid: {
+                  display: true,
+                  color: 'rgba(0,0,0,0.1)',
+                  drawBorder: false
+                },
+                ticks: {
+                  maxRotation: 45,
+                  minRotation: 45,
+                  font: {
+                    size: 11
+                  }
+                },
+                title: {
+                  display: true,
+                  text: 'Tiempo',
+                  font: { size: 14, weight: 'bold' },
+                  padding: {top: 10, bottom: 10}
+                }
+              },
+              y: {
+                beginAtZero: false,
+                min: 0,
+                max: 2000,
+                grid: {
+                  color: 'rgba(0,0,0,0.1)',
+                  drawBorder: false
+                },
+                ticks: {
+                  stepSize: 200,
+                  font: {
+                    size: 11
+                  }
+                },
+                title: {
+                  display: true,
+                  text: 'Concentración',
+                  font: { size: 14, weight: 'bold' },
+                  padding: {top: 10, bottom: 10}
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  padding: 20,
+                  usePointStyle: true,
+                  font: { size: 12, weight: 'bold' }
+                }
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                titleColor: '#1B4D3E',
+                bodyColor: '#666',
+                borderColor: '#ddd',
+                borderWidth: 1,
+                padding: 10,
+                callbacks: {
+                  label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                      label += ': ';
+                    }
+                    if (context.parsed.y !== null) {
+                      label += context.parsed.y.toFixed(1);
+                    }
+                    return label;
+                  }
+                }
+              }
+            },
+            interaction: {
+              intersect: false,
+              mode: 'index'
+            },
+            animation: {
+              duration: 1000,
+              easing: 'easeInOutQuart'
+            }
+          }
+        });
+      }
+
+      function initChartMensual() {
+        const ctx = document.getElementById('grafica-mensual').getContext('2d');
+        
+        chartMensual = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'Promedio CO2 (ppm)',
+              data: [],
+              backgroundColor: '#A3D1C6',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              title: { display: false }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                title: { text: 'Semanas', display: true }
+              },
+              y: {
+                beginAtZero: true,
+                title: { text: 'ppm', display: true },
+                grid: { color: 'rgba(0,0,0,0.05)' }
+              }
+            }
+          }
+        });
+      }
+
+      function updateMonthlyData(co2Value) {
+        const now = moment();
+        const weekNumber = Math.floor(now.date() / 7);
+        
+        if(!weeklyData[weekNumber]) {
+          weeklyData[weekNumber] = {
+            sum: 0,
+            count: 0,
+            label: `Sem ${weekNumber + 1}`
+          };
+        }
+        
+        weeklyData[weekNumber].sum += co2Value;
+        weeklyData[weekNumber].count++;
+
+        // Mantener máximo de semanas
+        if(weeklyData.length > maxWeeks) {
+            weeklyData.shift();
+        }
+        
+        // Actualizar gráfico
+        const labels = [];
+        const data = [];
+        
+        weeklyData.slice(-maxWeeks).forEach(week => {
+          labels.push(week.label);
+          data.push(Math.round(week.sum / week.count));
+        });
+        
+        chartMensual.data.labels = labels;
+        chartMensual.data.datasets[0].data = data;
+        chartMensual.update();
+        saveToLocalStorage();  // Guardar datos actualizados
+      }
+
+      function updateQualityStatus(co2Level) {
+        const statusElement = document.getElementById('estado-calidad-aire');
+        const descriptionElement = document.getElementById('descripcion-calidad');
+        
+        let status = 'BUENO';
+        let description = 'Sin impactos para la salud en este rango. Se puede realizar cualquier actividad al aire libre';
+        
+        if (co2Level > 751) {
+          status = 'DAÑINA';
+          description = 'Evitar actividades al aire libre';
+        } else if (co2Level < 750 && co2Level > 900 ) {
+          status = 'MODERADO';
+          description = 'Considerar reducir actividades intensas';
+        } 
+        
+        statusElement.className = status;
+        statusElement.textContent = status;
+        descriptionElement.textContent = description;
+      }
+
+      function updateData(snapshot) {
+        const data = snapshot.val();
+        if (!data) return;
+
+        const co2Value = parseFloat(data.CO2) || 0;
+        const tvocValue = parseFloat(data.tTVOC) || 0;
+        const currentTime = moment().format('DD/MM HH:mm');
+
+        // Actualizar valores del sensor
+        if (!primerValor && co2Value > 0) primerValor = co2Value;
+        ultimoValor = co2Value;
+        
+        document.getElementById('primer-valor').textContent = primerValor ? Math.round(primerValor) : '--';
+        document.getElementById('ultimo-valor').textContent = Math.round(ultimoValor);
+
+        // Actualizar valores como enteros
+        co2Element.firstChild.textContent = Math.round(co2Value);
+        tvocElement.firstChild.textContent = Math.round(tvocValue);
+
+        // Mostrar unidades solo si el valor es mayor a 0
+        co2Unidad.style.display = co2Value > 0 ? 'inline' : 'none';
+        tvocUnidad.style.display = tvocValue > 0 ? 'inline' : 'none';
+
+        // Actualizar arrays
+        timeLabels.push(currentTime);
+        co2Data.push(co2Value);
+        tvocData.push(tvocValue);
+
+        // Mantener límite de datos
+        if (timeLabels.length > maxDataPoints) {
+          timeLabels.shift();
+          co2Data.shift();
+          tvocData.shift();
+        }
+
+        // Actualizar graficos
+        if (chart) {
+          chart.data.labels = timeLabels;
+          chart.data.datasets[0].data = co2Data;
+          chart.data.datasets[1].data = tvocData;
+          chart.update('none');
+        }
+
+        updateQualityStatus(co2Value);
+        saveToLocalStorage();  // Guardar después de cada actualización
+      }
+
+      function updateTime() {
+        document.getElementById('hora-actual').textContent = moment().format('HH:mm');
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // Obtener referencias a los elementos
+        co2Element = document.getElementById('co2');
+        tvocElement = document.getElementById('tvoc');
+        co2Unidad = co2Element.querySelector('.unidad');
+        tvocUnidad = tvocElement.querySelector('.unidad');
+
+        // Botón de reinicio (agregar en HTML)
+        document.getElementById('resetData').addEventListener('click', () => {
+            localStorage.clear();
+            location.reload();
+        });
+        
+        initChart();
+        initChartMensual();
+        updateTime();
+        setInterval(updateTime, 60000);
+        datosRef.on('value', updateData);
+      });
+    </script>  
+  </body>
+</html>
