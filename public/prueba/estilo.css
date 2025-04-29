@@ -1,0 +1,444 @@
+:root {
+    --verde-primario: #8AA896;
+    --verde-oscuro: #556B2F;
+    --beige: #F5F0E6;
+    --gris-oscuro: #3D3D3D;
+    --blanco: #FFFFFF;
+    --sombra: 0 10px 30px rgba(0,0,0,0.1);
+    --transicion: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Reset y estilos base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Lora', serif;
+    color: var(--gris-oscuro);
+    line-height: 1.6;
+    background-color: var(--beige);
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate {
+    animation: fadeInUp 0.8s ease-out forwards;
+    opacity: 0;
+}
+
+/* Header */
+.header {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    background: rgba(255,255,255,0.98);
+    box-shadow: var(--sombra);
+    z-index: 1000;
+    padding: 1rem 0;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+.logo-img {
+    height: 45px;
+    transition: var(--transicion);
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--gris-oscuro);
+    margin-left: 2rem;
+    font-weight: 500;
+    position: relative;
+    padding-bottom: 5px;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--verde-oscuro);
+    transition: var(--transicion);
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+/* Hero Section */
+.hero {
+    height: 100vh;
+    background: linear-gradient(rgba(245,240,230,0.9), rgba(245,240,230,0.9)),
+                url('images/microalgas-hero.jpg') center/cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding-top: 80px;
+}
+
+.hero-content {
+    max-width: 800px;
+    padding: 2rem;
+}
+
+.hero h1 {
+    font-size: 2.8rem;
+    color: var(--verde-oscuro);
+    margin-bottom: 1.5rem;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    color: var(--gris-oscuro);
+}
+
+/* Objetivos Section */
+.objetivos-section {
+    padding: 6rem 2rem;
+    background: var(--beige);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.objetivos-section h2 {
+    font-size: 2.2rem;
+    color: var(--verde-oscuro);
+    margin-bottom: 3rem;
+}
+
+.objetivos-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    margin: 3rem auto;
+}
+
+.objetivo-card {
+    background: var(--blanco);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: var(--sombra);
+    transition: var(--transicion);
+    opacity: 0;
+}
+
+.objetivo-card:hover {
+    transform: translateY(-10px);
+}
+
+.numero-objetivo {
+    font-size: 2.5rem;
+    color: var(--verde-primario);
+    font-weight: 300;
+    margin-bottom: 1rem;
+}
+
+.objetivo-card h3 {
+    color: var(--verde-oscuro);
+    margin-bottom: 1rem;
+}
+
+.objetivo-card p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Sección Calidad */
+.calidad-section {
+    padding: 6rem 2rem;
+    background: var(--blanco);
+}
+
+.calidad-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.calidad-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    background: var(--verde-oscuro);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.calidad-texto {
+    padding: 3rem;
+    color: var(--blanco);
+}
+
+.linea-divisora {
+    width: 50px;
+    height: 2px;
+    background: var(--blanco);
+    margin: 1.5rem 0;
+}
+
+.btn-calidad {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    background: var(--blanco);
+    color: var(--verde-oscuro);
+    border-radius: 25px;
+    text-decoration: none;
+    margin-top: 1.5rem;
+    transition: var(--transicion);
+    font-weight: 600;
+}
+
+.btn-calidad:hover {
+    background: var(--verde-primario);
+    color: var(--blanco);
+}
+
+.calidad-imagen img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    min-height: 300px;
+}
+
+/* Footer */
+.footer {
+    background: var(--gris-oscuro);
+    color: var(--blanco);
+    padding: 4rem 2rem;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+}
+
+.footer-col h4 {
+    font-family: 'Montserrat', sans-serif;
+    border-bottom: 2px solid var(--verde-primario);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.footer-col ul {
+    list-style: none;
+}
+
+.footer-col ul li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-col ul li a {
+    color: var(--blanco);
+    text-decoration: none;
+    transition: var(--transicion);
+}
+
+.footer-col ul li a:hover {
+    color: var(--verde-primario);
+}
+
+.contacto-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.social-icons {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.social-icons a {
+    color: var(--blanco);
+    transition: var(--transicion);
+}
+
+.social-icons a:hover {
+    color: var(--verde-primario);
+}
+
+@media (max-width: 768px) {
+    .objetivos-grid,
+    .calidad-card,
+    .footer-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .nav-links {
+        display: none;
+    }
+    
+    .hero h1 {
+        font-size: 2rem;
+    }
+    
+    .calidad-texto {
+        padding: 2rem;
+    }
+}
+
+/* Contenedor para las microalgas */
+.microalgas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none; /* Para que no interfiera con los clicks */
+    z-index: 0;
+}
+
+/* Estilos base para cada microalga */
+.microalga {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: rgba(138, 168, 150, 0.4); /* Verde primario con transparencia */
+    border-radius: 40% 70% 60% 30% / 40% 50% 60% 50%;
+    box-shadow: 0 0 5px rgba(85, 107, 47, 0.2);
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Variantes de microalgas */
+.microalga:nth-child(2n) {
+    width: 10px;
+    height: 10px;
+    background-color: rgba(85, 107, 47, 0.3); /* Verde oscuro con transparencia */
+    border-radius: 50% 60% 30% 70% / 60% 40% 70% 40%;
+}
+
+.microalga:nth-child(3n) {
+    width: 8px;
+    height: 12px;
+    background-color: rgba(245, 240, 230, 0.5); /* Beige con transparencia */
+    border-radius: 40% 30% 70% 50% / 50% 60% 30% 60%;
+}
+
+.microalga:nth-child(4n) {
+    width: 12px;
+    height: 8px;
+    background-color: rgba(138, 168, 150, 0.3); /* Verde primario con transparencia */
+    border-radius: 60% 40% 50% 30% / 30% 60% 40% 70%;
+}
+
+/* Animación para la caída de las microalgas */
+@keyframes floatingMicroalga {
+    0% {
+        transform: translateY(-5vh) rotate(0deg) scale(0.8);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.8;
+    }
+    90% {
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(105vh) rotate(360deg) scale(1.2);
+        opacity: 0;
+    }
+}
+
+/* Animación para el movimiento horizontal */
+@keyframes horizontalMovement {
+    0% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(15px);
+    }
+    50% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(8px);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+/* Aplicamos las animaciones a las microalgas */
+.microalga {
+    animation: floatingMicroalga 15s linear infinite, 
+               horizontalMovement 8s ease-in-out infinite;
+}
+
+/* Diferentes tiempos y retrasos para cada microalga */
+.microalga:nth-child(2n) {
+    animation-duration: 18s, 7s;
+}
+
+.microalga:nth-child(3n) {
+    animation-duration: 16s, 9s;
+}
+
+.microalga:nth-child(4n) {
+    animation-duration: 20s, 10s;
+}
+
+/* Efecto de brillo sutil */
+.microalga::after {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 20%;
+    width: 40%;
+    height: 40%;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    filter: blur(1px);
+}
+
+/* Media query para dispositivos móviles */
+@media (max-width: 768px) {
+    .microalga {
+        width: 8px;
+        height: 8px;
+    }
+    
+    .microalga:nth-child(2n) {
+        width: 6px;
+        height: 6px;
+    }
+    
+    .microalga:nth-child(3n) {
+        width: 5px;
+        height: 7px;
+    }
+    
+    .microalga:nth-child(4n) {
+        width: 7px;
+        height: 5px;
+    }
+}
